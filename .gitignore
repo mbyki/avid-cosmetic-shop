@@ -1,0 +1,51 @@
+# ================= Backend (Python / Django) =================
+# فایل‌های کش و کامپایل شده پایتون
+__pycache__/
+*.py[cod]
+*$py.class
+
+# فایل محیط مجازی (اگر داری)
+venv/
+env/
+
+# متغیرهای محیطی و اطلاعات حساس (بسیار مهم)
+.env
+
+# دیتابیس محلی
+db.sqlite3
+db.sqlite3-journal
+
+# فایل‌های آپلود شده کاربران در زمان توسعه
+media/
+
+# ================= Frontend (React / Node.js) =================
+# وابستگی‌های فرانت‌اند (بسیار سنگین، نباید آپلود شود)
+node_modules/
+/frontend/.pnp
+/frontend/.pnp.js
+
+# فایل‌های build شده (نیازی در گیت‌هاب نیست)
+/frontend/build/
+/frontend/dist/
+
+# لاگ‌های خطا
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# متغیرهای محیطی فرانت‌اند
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ================= سیستم‌عامل و ادیتورها =================
+# فایل‌های سیستم‌عامل مک و ویندوز
+.DS_Store
+Thumbs.db
+
+# تنظیمات ادیتورها (VS Code, PyCharm و...)
+.vscode/
+.idea/
+*.swp
