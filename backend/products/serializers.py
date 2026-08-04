@@ -33,7 +33,7 @@ class ProductSerializer(serializers.ModelSerializer):
     is_in_wishlist = serializers.SerializerMethodField() # <--- این خط جا افتاده بود!
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'image_url', 'category', 'category_name', 'is_summer_sale', 'discounted_price', 'reviews', 'stock' ,'is_in_wishlist']
+        fields = ['id', 'name', 'description', 'price', 'image_url', 'category', 'category_name', 'is_summer_sale', 'discounted_price', 'reviews', 'stock' ,'is_in_wishlist' , "discount_percent"]
 
     def get_is_in_wishlist(self, obj):
         # چک میکند آیا کاربر لاگین کرده و این محصول در لیست علاقه‌مندی‌های اوست
@@ -53,8 +53,9 @@ class ProductSerializer(serializers.ModelSerializer):
         return None
 
     def get_discounted_price(self, obj):
-        if getattr(obj, 'is_summer_sale', False):
-            discount = obj.price * (Decimal('25') / Decimal('100'))
+        # اگر محصول در تخفیف بود و درصدی بیشتر از 0 داشت
+        if getattr(obj, 'is_summer_sale', False) and obj.discount_percent > 0:
+            discount = obj.price * (Decimal(str(obj.discount_percent)) / Decimal('100'))
             return obj.price - discount
         return None
 

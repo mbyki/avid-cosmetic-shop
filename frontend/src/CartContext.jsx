@@ -17,8 +17,18 @@ export const CartProvider = ({ children }) => {
     setTimeout(() => setToastMessage(""), 3000);
   };
 
-  const incrementQty = (id) => {
-    setCart(cart.map(item => item.id === id ? { ...item, quantity: item.quantity + 1 } : item));
+    const incrementQty = (id) => {
+    setCart(cart.map(item => {
+      if (item.id === id) {
+        // بررسی موجودی انبار: اگر تعداد فعلی کمتر از موجودی است، یکی اضافه کن
+        if (item.stock && item.quantity >= item.stock) {
+          alert("به حداکثر موجودی انبار رسیدید!");
+          return item; // تغییر ندهد
+        }
+        return { ...item, quantity: item.quantity + 1 };
+      }
+      return item;
+    }));
   };
 
   const decrementQty = (id) => {

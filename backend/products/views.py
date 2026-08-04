@@ -10,6 +10,8 @@ from .serializers import ProductSerializer, CategorySerializer, RegisterSerializ
 
 from django.db.models import Case, When, F, FloatField, Sum, Value, IntegerField
 from django.db.models.functions import Coalesce
+from django.db.models import ExpressionWrapper
+from django.db.models import Value
 from decimal import Decimal
 
 from django.db.models import Prefetch # این خط را به بالای فایل (بخش import ها) اضافه کن
@@ -23,13 +25,18 @@ def product_list(request):
     max_price = request.GET.get('max_price', None)
     ordering = request.GET.get('ordering', None)
     
-    # ۱. بهینه‌سازی اولیه: آوردن دسته‌بندی و نظرات تایید شده همزمان با محصول
-        # ۱. بهینه‌سازی و محاسبه قیمت نهایی و تعداد فروش
+    # فرمول محاسبه قیمت با درصد دلخواه: قیمت * (100 - درصد تخفیف) / 100
+    final_price_calc = ExpressionWrapper(
+        F('price') * (Value(100.0) - F('discount_percent')) / Value(100.0), 
+        output_field=FloatField()
+    )
+    
+    # ۱. بهینه‌سازی و محاسبه قیمت نهایی و تعداد فروش
     products = Product.objects.select_related('category').prefetch_related(
         Prefetch('reviews', queryset=Review.objects.filter(is_approved=True))
     ).annotate(
         final_price=Case(
-            When(is_summer_sale=True, then=F('price') * Decimal('0.75')),
+            When(is_summer_sale=True, then=final_price_calc),
             default=F('price'),
             output_field=FloatField()
         ),
@@ -56,12 +63,12 @@ def product_list(request):
         products = products.order_by('-id')
     elif ordering == 'best_seller':
         products = products.order_by('-total_sold')    
+        
     paginator = PageNumberPagination()
     paginator.page_size = 8
     result_page = paginator.paginate_queryset(products, request)
     serializer = ProductSerializer(result_page, many=True, context={'request': request})
-    return paginator.get_paginated_response(serializer.data) 
-
+    return paginator.get_paginated_response(serializer.data)
 
 @api_view(['GET'])
 def product_detail(request, pk):

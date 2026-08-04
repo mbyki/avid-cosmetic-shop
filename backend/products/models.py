@@ -16,6 +16,8 @@ class Product(models.Model):
 
     # این خط اضافه شد:
     is_summer_sale = models.BooleanField(default=False, verbose_name="آیا در سامرتخفیف است؟")
+    # این خط اضافه شد:
+    discount_percent = models.PositiveIntegerField(default=0, verbose_name="درصد تخفیف (0 تا 100)")
 
     def __str__(self):
         return self.name

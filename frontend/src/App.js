@@ -342,7 +342,7 @@ const AutoProductSlider = ({ title, products, addToCart }) => {
             <Link to={`/product/${product.id}`}>
               <div className="product-image">
                 <img src={product.image_url || 'https://via.placeholder.com/300'} alt={product.name} />
-                {product.is_summer_sale && <span className="discount-badge">۲۵٪ تخفیف</span>}
+                {product.is_summer_sale && <span className="discount-badge">{product.discount_percent}٪ تخفیف</span>}
               </div>
               <div className="product-info">
                 <span className="badge">{product.category_name || 'عمومی'}</span>
@@ -730,7 +730,7 @@ const ProductDetail = () => {
               <>
                 <span className="original-price-detail">{Number(product.price).toLocaleString()} تومان</span>
                 <span className="detail-price discount-price-detail">{Number(product.discounted_price).toLocaleString()} تومان</span>
-                <span className="save-badge">۲۵٪ تخفیف سامرتایم</span>
+                <span className="save-badge">{product.discount_percent}٪ تخفیف سامرتایم</span>
               </>
             ) : (
               <span className="detail-price">{Number(product.price).toLocaleString()} تومان</span>
@@ -886,7 +886,11 @@ const Cart = () => {
           </div>
           
           <div className="quantity-controller">
-            <button onClick={() => incrementQty(item.id)} className="qty-btn">+</button>
+            <button 
+              onClick={() => incrementQty(item.id)} 
+              className="qty-btn"
+              disabled={item.stock && item.quantity >= item.stock}
+            >+</button>
             <span className="qty-value">{item.quantity}</span>
             <button onClick={() => decrementQty(item.id)} className="qty-btn">-</button>
           </div>
@@ -1357,7 +1361,7 @@ const ProductGrid = ({ products, title }) => {
             <Link to={`/product/${product.id}`}>
               <div className="product-image">
                 <img src={product.image_url || 'https://via.placeholder.com/300'} alt={product.name} />
-                {product.is_summer_sale && <span className="discount-badge">۲۵٪ تخفیف</span>}
+                {product.is_summer_sale && <span className="discount-badge">{product.discount_percent}٪ تخفیف</span>}
               </div>
               <div className="product-info">
                 <span className="badge">{product.category_name || 'عمومی'}</span>

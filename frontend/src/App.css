@@ -2483,3 +2483,15 @@ body {
   margin-top: 5px;
   font-weight: 600;
 }
+/* استایل دکمه + وقتی به حداکثر موجودی رسید */
+.qty-btn:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.qty-btn:disabled:hover {
+  background: #e0e0e0;
+  transform: none;
+}
