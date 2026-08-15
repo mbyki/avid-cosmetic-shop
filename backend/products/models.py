@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="نام دسته‌بندی")
-    image_url = models.URLField(max_length=500, blank=True, verbose_name="لینک عکس دسته‌بندی")
+    image_url = models.CharField(max_length=500, blank=True, verbose_name="لینک عکس دسته‌بندی")
     def __str__(self):
         return self.name
 
@@ -10,7 +10,7 @@ class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name="نام محصول")
     description = models.TextField(verbose_name="توضیحات")
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="قیمت")
-    image_url = models.URLField(max_length=500, blank=True, verbose_name="لینک عکس")
+    image_url = models.CharField(max_length=500, blank=True, verbose_name="لینک عکس")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="دسته‌بندی")
     stock = models.PositiveIntegerField(default=10, verbose_name="موجودی انبار")
 
@@ -93,7 +93,7 @@ class Article(models.Model):
     title = models.CharField(max_length=200, verbose_name="عنوان مقاله")
     short_desc = models.CharField(max_length=300, verbose_name="خلاصه کوتاه")
     body = models.TextField(verbose_name="متن کامل مقاله")
-    image_url = models.URLField(max_length=500, blank=True, verbose_name="لینک عکس")
+    image_url = models.CharField(max_length=500, blank=True, verbose_name="آدرس عکس")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ انتشار")
 
     def __str__(self):
