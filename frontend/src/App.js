@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { CartProvider, useCart } from './CartContext';
-import { FaSearch, FaShoppingCart, FaUserCircle, FaHome, FaList, FaTag, FaHeart, FaQuestionCircle, FaNewspaper } from 'react-icons/fa';
+import { FaSearch, FaShoppingCart, FaUserCircle, FaHome, FaList, FaTag, FaHeart, FaNewspaper, FaLeaf, FaRecycle, FaCertificate, FaTachometerAlt, FaBars, FaTimes, FaPhoneAlt } from 'react-icons/fa';
+import avidLogo from './assets/logo-avid.png';
 import './App.css';
 import { AuthProvider, useAuth } from './AuthContext';
 import axios from 'axios';
@@ -33,6 +34,8 @@ const Navbar = () => {
   // استیت‌های جستجوی زنده
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (authTokens) {
@@ -67,39 +70,53 @@ const Navbar = () => {
   };
 
   return (
+    <>
     <nav className="navbar">
-      <div className="nav-logo"><Link to="/">آوید <span>Av</span></Link></div>
+      <div className="nav-logo"><Link to="/"><img src={avidLogo} alt="آوید" /></Link></div>
+
       <div className="nav-links">
-        <Link to="/"><FaHome /> خانه</Link>
         <Link to="/products"><FaList /> محصولات</Link>
         <Link to="/categories"><FaTag /> دسته‌بندی‌ها</Link>
         <Link to="/matik"><FaNewspaper /> ماتیک وبلاگ</Link>
         {authTokens && <Link to="/wishlist"><FaHeart /> علاقه‌مندی‌ها</Link>}
+        <Link to="/contact"><FaPhoneAlt /> تماس با ما</Link>
         <Link to="/admin-dashboard">داشبورد ادمین</Link>
       </div>
+
       <div className="nav-left">
         
-        {/* باکس جستجوی زنده */}
-        <div className="search-container">
-          <form className="search-box" onSubmit={handleSubmit}>
-            <input 
-              type="text" 
-              placeholder="جستجوی محصول..." 
-              value={searchQuery} 
-              onChange={handleSearchChange} 
-            />
-            <button type="submit"><FaSearch /></button>
-          </form>
+        {/* آیکون جستجو (با کلیک باز/بسته می‌شود) - فقط دسکتاپ */}
+        <div className={`search-container ${isSearchOpen ? 'open' : ''}`}>
+          <button
+            type="button"
+            className="search-toggle-btn"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            aria-label="جستجو"
+          >
+            <FaSearch />
+          </button>
+
+          {isSearchOpen && (
+            <form className="search-box" onSubmit={handleSubmit}>
+              <input
+                type="text"
+                autoFocus
+                placeholder="جستجوی محصول..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </form>
+          )}
           
           {/* لیست کشویی نتایج جستجو */}
-          {searchResults.length > 0 && (
+          {isSearchOpen && searchResults.length > 0 && (
             <div className="search-dropdown">
               {searchResults.map(p => (
                 <Link 
                   to={`/product/${p.id}`} 
                   key={p.id} 
                   className="search-item"
-                  onClick={() => { setSearchResults([]); setSearchQuery(''); }}
+                  onClick={() => { setSearchResults([]); setSearchQuery(''); setIsSearchOpen(false); }}
                 >
                   <img src={p.image_url || 'https://via.placeholder.com/50'} alt={p.name} />
                   <div className="search-item-info">
@@ -117,19 +134,82 @@ const Navbar = () => {
 
         <Link to="/cart" className="cart-icon"><FaShoppingCart /> <span className="cart-badge">{totalItems}</span></Link>
         
+        {/* دکمه اکانت - فقط دسکتاپ (در موبایل داخل منوی کشویی است) */}
         {authTokens ? (
           <div className="user-menu">
-            <Link to="/profile" className="user-icon-container">
+            <Link to="/profile" className="account-btn">
               <FaUserCircle />
-              {userName && <span className="user-name-nav">{userName}</span>}
+              {userName && <span className="account-name">{userName}</span>}
             </Link>
-            <button onClick={logoutUser} className="btn-danger btn-sm">خروج</button>
+            <button onClick={logoutUser} className="logout-btn">خروج</button>
           </div>
         ) : (
           <Link to="/login" className="user-icon"><FaUserCircle /></Link>
         )}
+
+        {/* دکمه منوی همبرگری (فقط موبایل) */}
+        <button
+          type="button"
+          className="hamburger-btn"
+          onClick={() => setIsMenuOpen(true)}
+          aria-label="منو"
+        >
+          <FaBars />
+        </button>
       </div>
     </nav>
+
+    {/* پس‌زمینه تیره پشت منوی کشویی موبایل - بیرون از nav چون backdrop-filter روی nav باعث می‌شد fixed درست کار نکند */}
+    {isMenuOpen && <div className="mobile-menu-overlay" onClick={() => setIsMenuOpen(false)}></div>}
+
+    {/* منوی کشویی موبایل (از سمت راست باز می‌شود) */}
+    <div className={`mobile-drawer ${isMenuOpen ? 'open' : ''}`}>
+      <div className="mobile-drawer-header">
+        <button className="mobile-drawer-close" onClick={() => setIsMenuOpen(false)} aria-label="بستن منو">
+          <FaTimes />
+        </button>
+        <img src={avidLogo} alt="آوید" className="mobile-drawer-logo" />
+      </div>
+
+      {/* جستجو داخل منوی موبایل */}
+      <form className="mobile-drawer-search" onSubmit={(e) => { handleSubmit(e); setIsMenuOpen(false); }}>
+        <FaSearch />
+        <input
+          type="text"
+          placeholder="جستجوی محصول..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </form>
+
+      <nav className="mobile-drawer-links">
+        <Link to="/" onClick={() => setIsMenuOpen(false)}><FaHome /> صفحه اصلی</Link>
+        <Link to="/products" onClick={() => setIsMenuOpen(false)}><FaList /> محصولات</Link>
+        <Link to="/categories" onClick={() => setIsMenuOpen(false)}><FaTag /> دسته‌بندی‌ها</Link>
+        <Link to="/matik" onClick={() => setIsMenuOpen(false)}><FaNewspaper /> ماتیک وبلاگ</Link>
+        {authTokens && <Link to="/wishlist" onClick={() => setIsMenuOpen(false)}><FaHeart /> علاقه‌مندی‌ها</Link>}
+        <Link to="/contact" onClick={() => setIsMenuOpen(false)}><FaPhoneAlt /> تماس با ما</Link>
+        <Link to="/admin-dashboard" onClick={() => setIsMenuOpen(false)}><FaTachometerAlt /> داشبورد ادمین</Link>
+      </nav>
+
+      <div className="mobile-drawer-account">
+        {authTokens ? (
+          <>
+            <Link to="/profile" className="mobile-drawer-account-link" onClick={() => setIsMenuOpen(false)}>
+              <FaUserCircle />
+              <span>{userName || 'پروفایل من'}</span>
+            </Link>
+            <button onClick={() => { logoutUser(); setIsMenuOpen(false); }} className="logout-btn mobile-logout-btn">خروج</button>
+          </>
+        ) : (
+          <Link to="/login" className="mobile-drawer-account-link" onClick={() => setIsMenuOpen(false)}>
+            <FaUserCircle />
+            <span>ورود / ثبت‌نام</span>
+          </Link>
+        )}
+      </div>
+    </div>
+    </>
   );
 };
 // --- بنر تخفیف تابستانی با شمارنده معکوس ---
@@ -288,10 +368,15 @@ const CategoryBar = () => {
   return (
     <div className="category-bar-container">
       <h2 className="category-bar-title">دسته‌بندی محصولات</h2>
-      <div className="category-bar">
+      <div className="category-bar-grid">
         {categories.map(cat => (
-          <Link to={`/products?category=${cat.id}`} key={cat.id} className="category-pill">
-            {cat.name}
+          <Link
+            to={`/products?category=${cat.id}`}
+            key={cat.id}
+            className="category-bar-card"
+            style={{ backgroundImage: `url(${cat.image_url || 'https://via.placeholder.com/500'})` }}
+          >
+            <span className="category-bar-card-label">{cat.name}</span>
           </Link>
         ))}
       </div>
@@ -373,6 +458,26 @@ const AutoProductSlider = ({ title, products, addToCart }) => {
 // --- صفحه اصلی (Home) ---
 
 // --- صفحه اصلی (Home) ---
+// --- بخش کوچک "چرا آوید" (سه ویژگی، مطابق تصویر مرجع) ---
+const WhyAvid = () => {
+  return (
+    <div className="why-avid">
+      <div className="why-avid-item">
+        <span className="why-avid-icon"><FaLeaf /></span>
+        <span>مواد اولیه پاک</span>
+      </div>
+      <div className="why-avid-item">
+        <span className="why-avid-icon"><FaRecycle /></span>
+        <span>بسته‌بندی بازیافتی</span>
+      </div>
+      <div className="why-avid-item">
+        <span className="why-avid-icon"><FaCertificate /></span>
+        <span>تایید شده توسط متخصص پوست</span>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const [summerProducts, setSummerProducts] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
@@ -391,27 +496,28 @@ const Home = () => {
   return (
     <>
       <SummerBanner />
-      <CategoryBar />
-      
-      {/* اسلایدر پرفروش‌ترین‌ها (خودکار) */}
-      <AutoProductSlider title="🔥 پرفروش‌ترین‌های آوید" products={bestSellers} addToCart={addToCart} />
 
-      <ModelsSlider />
-      
-      <div className="hero-section">
-        <h1>زیبایی واقعی با آوید</h1>
-        <p>بهترین برندهای لوازم آرایشی و مراقبت از پوست، با ترکیبی از طبیعت و علم</p>
-        <div className="hero-actions">
-          <Link to="/products" className="btn-circle btn-shop"><span>شروع خرید</span></Link>
-          <Link to="/register" className="btn-circle btn-register">
-            <div className="circle-content">
+      <div className="hero-flex">
+        <div className="hero-section">
+          <h1>زیبایی واقعی با آوید</h1>
+          <p>بهترین برندهای لوازم آرایشی و مراقبت از پوست، با ترکیبی از طبیعت و علم</p>
+          <div className="hero-actions">
+            <Link to="/products" className="btn-shop">شروع خرید</Link>
+            <Link to="/register" className="btn-register">
               <span className="register-title">ثبت‌نام کنید</span>
               <span className="register-sub">۱۰٪ تخفیف اولین خرید</span>
-            </div>
-            <div className="rotating-border"></div>
-          </Link>
+            </Link>
+          </div>
         </div>
+        <ModelsSlider />
       </div>
+
+      <WhyAvid />
+
+      <CategoryBar />
+
+      {/* اسلایدر پرفروش‌ترین‌ها (خودکار) */}
+      <AutoProductSlider title="🔥 پرفروش‌ترین‌های آوید" products={bestSellers} addToCart={addToCart} />
 
       {/* اسلایدر سامرتایم (خودکار) */}
       <AutoProductSlider title="☀️ پیشنهادهای داغ سامرتایم" products={summerProducts} addToCart={addToCart} />
@@ -785,7 +891,7 @@ const ProductDetail = () => {
           </form>
         ) : (
           <div className="review-form" style={{textAlign: 'center'}}>
-            <p>برای ثبت نظر ابتدا باید <Link to="/login" style={{color: 'var(--primary-pink)', fontWeight: 'bold'}}>وارد حساب خود شوید</Link>.</p>
+            <p>برای ثبت نظر ابتدا باید <Link to="/login" style={{color: 'var(--active-color)', fontWeight: 'bold'}}>وارد حساب خود شوید</Link>.</p>
           </div>
         )}
 
@@ -1001,7 +1107,7 @@ const Checkout = () => {
         <h1>تکمیل خرید و اطلاعات ارسال</h1>
         
         {/* پیام راهنما اضافه شد */}
-        <p className="checkout-note">ℹ️ اطلاعات زیر به صورت خودکار از پروفایل شما خوانده شده است. در صورت نیاز می‌توانید در <Link to="/profile" style={{color: 'var(--primary-pink)'}}>صفحه پروفایل</Link> آن را ویرایش کنید.</p>
+        <p className="checkout-note">ℹ️ اطلاعات زیر به صورت خودکار از پروفایل شما خوانده شده است. در صورت نیاز می‌توانید در <Link to="/profile" style={{color: 'var(--active-color)'}}>صفحه پروفایل</Link> آن را ویرایش کنید.</p>
         
         <form className="auth-form checkout-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -1358,43 +1464,52 @@ const ProductGrid = ({ products, title }) => {
       <div className="products-grid">
         {localProducts.map(product => (
           <div key={product.id} className="product-card">
-            <Link to={`/product/${product.id}`}>
-              <div className="product-image">
-                <img src={product.image_url || 'https://via.placeholder.com/300'} alt={product.name} />
-                {product.is_summer_sale && <span className="discount-badge">{product.discount_percent}٪ تخفیف</span>}
-              </div>
-              <div className="product-info">
-                <span className="badge">{product.category_name || 'عمومی'}</span>
-                <h2>{product.name}</h2>
-                <div className="price-container">
-                  {product.discounted_price ? (
-                    <>
-                      <span className="original-price">{Number(product.price).toLocaleString()} تومان</span>
-                      <span className="discount-price">{Number(product.discounted_price).toLocaleString()} تومان</span>
-                    </>
-                  ) : (
-                    <span className="price">{Number(product.price).toLocaleString()} تومان</span>
+
+            {/* عکس محصول + نشان‌های روی عکس (تخفیف / موجودی کم / علاقه‌مندی) */}
+            <div className="product-card-media">
+              <Link to={`/product/${product.id}`}>
+                <div className="product-image">
+                  <img src={product.image_url || 'https://via.placeholder.com/300'} alt={product.name} />
+                  {product.is_summer_sale && <span className="discount-badge">{product.discount_percent}٪ تخفیف</span>}
+                  {product.stock > 0 && product.stock <= 3 && (
+                    <span className="low-stock-badge">تنها {product.stock} عدد باقی مانده</span>
                   )}
                 </div>
-                {/* پیام موجودی کم در کارت محصول */}
-                {product.stock > 0 && product.stock <= 3 && (
-                  <p className="low-stock-warning">⚠️ تنها {product.stock} عدد در انبار باقی مانده!</p>
-                )}
+              </Link>
+              <button
+                className={`wishlist-btn-float ${product.is_in_wishlist ? 'active' : ''}`}
+                onClick={() => toggleWishlist(product)}
+                aria-label="افزودن به علاقه‌مندی‌ها"
+              >
+                <FaHeart />
+              </button>
+            </div>
+
+            {/* عنوان و توضیح کوتاه */}
+            <Link to={`/product/${product.id}`} className="product-card-link">
+              <div className="product-info">
+                <h2>{product.name}</h2>
+                <p className="product-desc">{product.description}</p>
               </div>
             </Link>
-            <div className="product-actions">
+
+            {/* قیمت و دکمه افزودن به سبد، همیشه ردیف پایین کارت */}
+            <div className="product-card-footer">
+              <div className="price-container">
+                {product.discounted_price ? (
+                  <>
+                    <span className="original-price">{Number(product.price).toLocaleString()} تومان</span>
+                    <span className="discount-price">{Number(product.discounted_price).toLocaleString()} تومان</span>
+                  </>
+                ) : (
+                  <span className="price">{Number(product.price).toLocaleString()} تومان</span>
+                )}
+              </div>
               {product.stock === 0 ? (
                 <button className="out-of-stock-btn" disabled>ناموجود</button>
               ) : (
                 <button className="buy-btn" onClick={() => handleAdd(product)}>افزودن به سبد</button>
               )}
-              {/* دکمه قلب */}
-              <button 
-                className={`wishlist-btn ${product.is_in_wishlist ? 'active' : ''}`} 
-                onClick={() => toggleWishlist(product)}
-              >
-                <FaHeart />
-              </button>
             </div>
           </div>
         ))}
@@ -1434,6 +1549,26 @@ const WishlistPage = () => {
   if (products.length === 0) return <div className="empty-page"><h2>لیست علاقه‌مندی‌های شما خالی است</h2><Link to="/products" className="btn-primary">رفتن به خرید</Link></div>;
 
   return <ProductGrid products={products} title="علاقه‌مندی‌های من" />;
+};
+
+// --- صفحه تماس با ما ---
+const ContactPage = () => {
+  return (
+    <div className="contact-page">
+      <h1 className="section-title">تماس با ما</h1>
+      <div className="contact-page-grid">
+        <div className="contact-page-info">
+          <ul className="contact-info">
+            <li>📍 آدرس: تهران، خیابان ولیعصر، برج آرایشی آوید، طبقه ۴</li>
+            <li>📞 تلفن تماس: ۰۲۱-۱۲۳۴۵۶۷۸</li>
+            <li>📱 موبایل: ۰۹۱۲-۹۸۷۶۵۴۳</li>
+            <li>✉️ ایمیل: info@avid-shop.ir</li>
+            <li>⏰ ساعات کاری: شنبه تا پنجشنبه ۹ تا ۲۱</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // --- صفحه سوالات متداول (FAQ) ---
@@ -1521,68 +1656,81 @@ const MatikDetailPage = () => {
   );
 };
 // --- ساختار اصلی ---
+// --- چیدمان اصلی (برای دسترسی به مسیر فعلی و مخفی کردن فوتر در صفحه ورود) ---
+const AppLayout = () => {
+  const location = useLocation();
+  const hideFooter = location.pathname === '/login';
+
+  return (
+    <div className="app-container">
+      <Navbar />
+      <div className="content-wrapper">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/search" element={<SearchResult />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/summer-sale" element={<SummerSalePage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/matik" element={<MatikPage />} />
+          <Route path="/matik/:id" element={<MatikDetailPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Routes>
+      </div>
+
+      {/* فوتر جدید با اطلاعات تماس (در صفحه ورود نمایش داده نمی‌شود) */}
+      {!hideFooter && (
+        <footer className="footer">
+          <div className="footer-content">
+            <div className="footer-col">
+              <h3>آوید <span>Av</span></h3>
+              <p>فروشگاه آنلاین لوازم آرایشی و بهداشتی با تضمین اصالت کالا و ارسال سریع به سراسر کشور.</p>
+            </div>
+            <div className="footer-col">
+              <h4>دسترسی سریع</h4>
+              <ul>
+                <li><Link to="/products">همه محصولات</Link></li>
+                <li><Link to="/summer-sale">تخفیف‌های تابستانه</Link></li>
+                <li><Link to="/cart">سبد خرید</Link></li>
+                <li><Link to="/login">ورود / ثبت‌نام</Link></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>ارتباط با ما</h4>
+              <ul className="contact-info">
+                <li>📍 آدرس: تهران، خیابان ولیعصر، برج آرایشی آوید، طبقه ۴</li>
+                <li>📞 تلفن تماس: ۰۲۱-۱۲۳۴۵۶۷۸</li>
+                <li>📱 موبایل: ۰۹۱۲-۹۸۷۶۵۴۳</li>
+                <li>✉️ ایمیل: info@avid-shop.ir</li>
+                <li>⏰ ساعات کاری: شنبه تا پنجشنبه ۹ تا ۲۱</li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>تمامی حقوق برای فروشگاه لوازم آرایشی آوید محفوظ است &copy; 2024</p>
+          </div>
+        </footer>
+      )}
+      <Toast />
+    </div>
+  );
+};
+
 function App() {
   return (
   <AuthProvider>
     <CartProvider>
       <Router>
-        <div className="app-container">
-          <Navbar />
-          <div className="content-wrapper">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/search" element={<SearchResult />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
-              <Route path="/summer-sale" element={<SummerSalePage />} />
-              <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/matik" element={<MatikPage />} />
-              <Route path="/matik/:id" element={<MatikDetailPage />} />
-            </Routes>
-          </div>
-          
-          {/* فوتر جدید با اطلاعات تماس */}
-          <footer className="footer">
-            <div className="footer-content">
-              <div className="footer-col">
-                <h3>آوید <span>Av</span></h3>
-                <p>فروشگاه آنلاین لوازم آرایشی و بهداشتی با تضمین اصالت کالا و ارسال سریع به سراسر کشور.</p>
-              </div>
-              <div className="footer-col">
-                <h4>دسترسی سریع</h4>
-                <ul>
-                  <li><Link to="/products">همه محصولات</Link></li>
-                  <li><Link to="/summer-sale">تخفیف‌های تابستانه</Link></li>
-                  <li><Link to="/cart">سبد خرید</Link></li>
-                  <li><Link to="/login">ورود / ثبت‌نام</Link></li>
-                </ul>
-              </div>
-              <div className="footer-col">
-                <h4>ارتباط با ما</h4>
-                <ul className="contact-info">
-                  <li>📍 آدرس: تهران، خیابان ولیعصر، برج آرایشی آوید، طبقه ۴</li>
-                  <li>📞 تلفن تماس: ۰۲۱-۱۲۳۴۵۶۷۸</li>
-                  <li>📱 موبایل: ۰۹۱۲-۹۸۷۶۵۴۳</li>
-                  <li>✉️ ایمیل: info@avid-shop.ir</li>
-                  <li>⏰ ساعات کاری: شنبه تا پنجشنبه ۹ تا ۲۱</li>
-                </ul>
-              </div>
-            </div>
-            <div className="footer-bottom">
-              <p>تمامی حقوق برای فروشگاه لوازم آرایشی آوید محفوظ است &copy; 2024</p>
-            </div>
-          </footer>
-          <Toast /> 
-        </div>
+        <AppLayout />
       </Router>
     </CartProvider>
   </AuthProvider>
