@@ -1,6 +1,21 @@
 import React, { createContext, useState, useContext } from 'react';
 import axios from 'axios';
 
+// اگر هر درخواستی ۴۰۱ (نشست منقضی/نامعتبر) برگردونه،
+// توکن قدیمی رو پاک می‌کنیم و کاربر رو به صفحه ورود می‌فرستیم
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('authTokens');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
